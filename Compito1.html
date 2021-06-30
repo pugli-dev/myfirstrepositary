@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>Oggetti js</title>
+        <meta charset="UTF-8">
+        <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0-beta3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-eOJMYsd53ii+scO/bJGFsiCZc+5NDVN2yr8+0RDqr0Ql0h+rP48ckxlpbzKgwra6" crossorigin="anonymous">
+    </head>
+    <body>
+        <header>
+            <nav class="navbar text-white bg-primary p-3">
+                <div class="container-fluid">
+                  <h5>Create your files</h5>
+                  <form class="d-flex">
+                    <input class="form-control" id="search" type="search" placeholder="Search" aria-label="Search">
+                    <input class="btn btn-outline-info" id="invia" type="submit" value="Cerca"></input>
+                  </form>
+                </div>
+              </nav>
+        </header>
+        <div class="container mt-3">
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="input-group mb-3">
+                        <input type="hidden" id="indice" value="-1">
+                        <span class="input-group-text" id="basic-addon1">Title</span>
+                        <input type="text" class="form-control titolo" placeholder="Write the title here!" aria-label="Example text with button addon" aria-describedby="button-addon1">
+                    </div>
+                    <div class="form-floating">
+                        <form method="post">
+                            <textarea id="mytextarea" placeholder="Write the text here!"></textarea>
+                        </form>
+                    </div>
+                    <br>
+                    <button class="btn btn-primary">New</button>  <button class="btn btn-success">Save</button>
+                    <div class="border mt-3 p-3">
+
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <table class="table">
+                        <tbody>
+                            <thead>
+                                <tr>
+                                    <th>Your files</th>
+                                
+                                </tr>
+                            </thead>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+        <script src="https://cdn.tiny.cloud/1/no-api-key/tinymce/5/tinymce.min.js" referrerpolicy="origin"></script>
+        <script>
+            tinymce.init({selector: '#mytextarea', height: '300'});
+
+            class File {
+                constructor(Titolo, Testo){
+                    this.titolo = Titolo;
+                    this.testo = Testo;
+                }
+            }
+
+            if(localStorage.getItem('files')){
+                var arrayLibri = localStorage.getItem('files');
+                arrayLibri = JSON.parse(arrayLibri);
+            } else {
+                var arrayLibri = [];
+            }
+            caricaFile();
+
+            const cerca = document.querySelector('#invia');
+            cerca.addEventListener('click', () =>{
+                const search = document.querySelector('#search').value;
+                console.log(search);
+                let risultati = [];
+                arrayLibri.forEach( (file) => {
+                    if( file.titolo.indexOf(search) > -1 ){
+                        risultati.push(file);
+                    }
+                });
+                const wrapper = document.querySelector('tbody');
+                wrapper.innerHTML = '';
+                risultati.forEach( (file, index) => {
+                    creaRiga(file, wrapper, index);
+                } );
+            });
+
+            const btnSave = document.querySelector('.btn-success');
+            btnSave.addEventListener('click', () => {
+                const Indice = document.querySelector('#indice').value;
+                const Titolo = document.querySelector('.titolo').value;
+                const Testo = tinymce.get("mytextarea").getContent({ format: "text" });
+                if( Indice == -1 ){
+                    let file = new File(Titolo, Testo);
+                    arrayLibri.push(file);
+                } else {
+                    arrayLibri[Indice].titolo = Titolo;
+                    arrayLibri[Indice].testo = Testo;
+                }
+                localStorage.setItem('files', JSON.stringify(arrayLibri));
+                const wrapper = document.querySelector('tbody');
+                wrapper.innerHTML = '';
+                caricaFile();
+               
+            });
+            function caricaFile(){
+                const wrapper = document.querySelector('tbody');
+                wrapper.innerHTML = '';
+                console.log(arrayLibri);
+                arrayLibri.forEach( (file, index) => {
+                    creaRiga(file, wrapper, index);
+                });
+            }
+            function creaRiga(file, wrapper, index){
+                let riga = document.createElement("tr");
+                riga.innerHTML = `<td>${index+1}. ${file.titolo}</td><td><button class="btn btn-danger" onClick="elimina(${index})">X</button></td>`;
+                wrapper.appendChild(riga);
+                riga.addEventListener('mouseover', function() {
+                    let t = document.querySelector('.border');
+                    riga.style.color = "red";
+                    t.innerHTML = `<p><b>Testo:</b> ${file.testo}</p>`;
+                });
+                riga.addEventListener('mouseout', function() {
+                    let t = document.querySelector('.border');
+                    riga.style.color = '';
+                    t.innerHTML = '';
+                });
+            }
+            const btnNew = document.querySelector('.btn-primary');
+            btnNew.addEventListener('click', (e) => {
+                e.preventDefault();
+                document.querySelector('.titolo').value = '';
+                tinymce.get('mytextarea').setContent('');
+            })
+            function elimina(index) {
+                arrayLibri.splice(index, 1);
+                localStorage.setItem('files', JSON.stringify(arrayLibri));
+                caricaFile();
+            }
+            
+                
+            
+        </script>
+</body>
+</html>
